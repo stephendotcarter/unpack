@@ -10,17 +10,26 @@ import (
 )
 
 var (
-	buildCommit   = ""
+	version       = "v0.0"
 	supportedExts = []string{".zip", ".tar.gz", ".tgz", ".gz"}
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: unpack FILE")
+	if len(os.Args) < 2 {
+		fmt.Printf("%s\n", version)
+		fmt.Printf("Usage: unpack <file>...\n")
 		os.Exit(0)
 	}
-	srcFile := os.Args[1]
-	extract(srcFile)
+
+	srcFiles := os.Args[1:]
+	for _, srcFile := range srcFiles {
+		fmt.Printf("Unpacking \"%s\"\n", srcFile)
+		if _, err := os.Stat(srcFile); os.IsNotExist(err) {
+			fmt.Printf("- File \"%s\" does not exist!\n", srcFile)
+		} else {
+			extract(srcFile)
+		}
+	}
 }
 
 func extract(srcFile string) {
@@ -81,7 +90,7 @@ func uncompress(srcFile string) (string, []string, error) {
 		return destDir, files, nil
 	}
 
-	fmt.Printf("Extracting %s (%s)\n", srcFile, cmd)
+	fmt.Printf("+ %s\n", srcFile)
 
 	if isDir {
 		if _, err := os.Stat(destDir); !os.IsNotExist(err) {
