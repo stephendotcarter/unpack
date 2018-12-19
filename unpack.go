@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
+	"github.com/mholt/archiver"
 )
 
 var (
 	version       = "v0.0"
-	supportedExts = []string{".zip", ".tar.gz", ".tgz", ".gz"}
+	supportedExts = []string{".zip", ".rar", ".tar.gz", ".tgz", ".gz"}
 )
 
 func main() {
@@ -65,26 +65,18 @@ func getSupportedFileExt(name string) string {
 }
 
 func uncompress(srcFile string) (string, []string, error) {
+	var err error
+
 	ext := getSupportedFileExt(srcFile)
 	destDir := getFileWithoutExt(srcFile, ext)
 	files := []string{}
 
-	cmd := ""
-	cmdArgs := []string{}
 	isDir := false
 
 	switch ext {
-	case ".zip":
-		cmd = "unzip"
-		cmdArgs = []string{srcFile, "-d", destDir}
-		isDir = true
-	case ".tgz", ".tar.gz":
-		cmd = "tar"
-		cmdArgs = []string{"-zxvf", srcFile, "-C", destDir}
+	case ".zip", ".rar", ".tgz", ".tar.gz":
 		isDir = true
 	case ".gz":
-		cmd = "gunzip"
-		cmdArgs = []string{srcFile}
 		isDir = false
 	default:
 		return destDir, files, nil
@@ -98,11 +90,15 @@ func uncompress(srcFile string) (string, []string, error) {
 			os.Exit(1)
 		}
 		os.Mkdir(destDir, 0755)
+		err = archiver.Unarchive(srcFile, destDir)
+	} else {
+		err = archiver.DecompressFile(srcFile, destDir)
+		if err == nil {
+			_ = os.Remove(srcFile)
+		}
 	}
 
-	output, err := exec.Command(cmd, cmdArgs...).CombinedOutput()
 	if err != nil {
-		os.Stderr.WriteString(string(output))
 		os.Stderr.WriteString(err.Error())
 		return destDir, files, err
 	}
