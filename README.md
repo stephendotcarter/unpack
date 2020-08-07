@@ -18,6 +18,14 @@ Recursively extract files
    Usage: unpack <file>...
    ```
 
+## From source
+
+```
+git clone https://github.com/stephendotcarter/unpack.git
+cd unpack
+go install
+```
+
 ## Usage
 
 - Here is an example compressed file
